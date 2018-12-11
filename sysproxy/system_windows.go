@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"regexp"
 	"syscall"
+	"unsafe"
 )
 
 // TurnOnSystemProxy used to enable system pac proxy, pac is a URL.
@@ -117,4 +118,25 @@ func GetDefaultGateway() (string, error) {
 		return "", errors.New("Can not find default gateway")
 	}
 	return ss[1], nil
+}
+
+// GetDefaultGatewayBySyscall returns default gateway by syscall
+func GetDefaultGatewayBySyscall() (string, error) {
+	iphlpapi, err := syscall.LoadDLL("getAdapterInfo.dll")
+	if err != nil {
+		return "", err
+	}
+	getDefaultGateWay := iphlpapi.MustFindProc("get_default_gateway")
+	r, _, _ := getDefaultGateWay.Call()
+	p := (*byte)(unsafe.Pointer(r))
+	data := make([]byte, 0)
+
+	for *p != 0 {
+		data = append(data, *p)
+		r += unsafe.Sizeof(byte(0))
+		p = (*byte)(unsafe.Pointer(r))
+	}
+	gateway := string(data)
+
+	return gateway, nil
 }

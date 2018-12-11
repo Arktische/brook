@@ -50,6 +50,7 @@ func (v *VPN) DeleteRoutes() error {
 		var err error
 		v.DefaultGateway, err = sysproxy.GetDefaultGateway()
 		if err != nil {
+			v.DefaultGateway, err = sysproxy.GetDefaultGatewayBySyscall()
 			return err
 		}
 	}
